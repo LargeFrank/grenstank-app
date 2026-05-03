@@ -60,22 +60,57 @@
   .result-panel.show{display:block;animation:slideUp .4s ease;}
   @keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 
-  .result-hero{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;}
-  .result-number{font-size:52px;font-weight:800;font-family:var(--mono);line-height:1;background:linear-gradient(135deg,var(--accent),#00b37a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  /* Hero */
+  .result-hero{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+  .result-number{font-size:56px;font-weight:800;font-family:var(--mono);line-height:1;background:linear-gradient(135deg,var(--accent),#00b37a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
   .result-unit{font-size:18px;color:var(--muted);}
-  .result-label{font-size:13px;color:var(--muted);margin-top:4px;}
+  .result-label{font-size:13px;color:var(--muted);margin-top:2px;}
 
-  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-top:16px;}
-  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
-  .stat-label{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
-  .stat-value{font-size:19px;font-family:var(--mono);font-weight:500;margin-top:4px;}
-  .stat-value.green{color:var(--accent);}.stat-value.orange{color:var(--accent2);}.stat-value.yellow{color:var(--be);}
-
-  .breakeven-bar{background:var(--surface2);border-radius:8px;height:6px;margin:14px 0 6px;overflow:hidden;}
+  /* Break-even bar */
+  .breakeven-bar{background:var(--surface2);border-radius:8px;height:8px;margin:14px 0 5px;overflow:hidden;}
   .breakeven-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:8px;transition:width .8s cubic-bezier(.34,1.56,.64,1);}
   .bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
 
+  /* Result sections */
+  .res-section{margin-top:18px;}
+  .res-section-title{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px;}
+
+  /* Price comparison row */
+  .price-compare{display:flex;align-items:center;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .price-compare-cell{flex:1;padding:14px 16px;text-align:center;}
+  .price-compare-cell + .price-compare-cell{border-left:1px solid var(--border);}
+  .pcc-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+  .pcc-value{font-family:var(--mono);font-size:22px;font-weight:600;}
+  .pcc-value.nl{color:var(--nl);}
+  .pcc-value.de{color:var(--de);}
+  .pcc-value.be{color:var(--be);}
+  .pcc-value.save{color:var(--accent);}
+  .price-arrow{padding:0 4px;color:var(--muted);font-size:18px;align-self:center;flex-shrink:0;}
+
+  /* Trip cost row */
+  .trip-row{display:flex;gap:10px;margin-top:10px;}
+  .trip-cell{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .trip-cell-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+  .trip-cell-value{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--text);}
+  .trip-cell-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  /* Scenario cards */
+  .scenario-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0;}
+  @media(max-width:600px){.scenario-grid{grid-template-columns:repeat(2,1fr);}}
+  .scenario-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;}
+  .scenario-card.win{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.05);}
+  .scenario-card.loss{border-color:rgba(255,107,53,.25);}
+  .sc-liters{font-size:12px;color:var(--muted);margin-bottom:5px;font-family:var(--mono);}
+  .sc-result{font-family:var(--mono);font-size:18px;font-weight:700;}
+  .sc-result.win{color:var(--accent);}
+  .sc-result.loss{color:var(--accent2);}
+  .sc-tag{font-size:10px;margin-top:4px;color:var(--muted);}
+
   .fuel-badge{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;font-family:var(--mono);color:var(--accent);margin-bottom:14px;}
+
+  /* legacy — keep for stats-grid fallback */
+  .stats-grid{display:none;}
+  .stat-card,.stat-label,.stat-value{display:none;}
 
   .calc-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b37a);border:none;border-radius:10px;color:#000;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px;}
   .calc-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,229,160,.25);}
@@ -223,15 +258,8 @@
         <div class="result-panel" id="result-panel">
           <div id="fuel-badge-wrap"></div>
           <div id="result-content"></div>
-          <div class="divider"></div>
-          <div class="stats-grid" id="stats-grid"></div>
-          <div style="margin-top:18px">
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Break-even visualisatie</div>
-            <div class="breakeven-bar"><div class="breakeven-fill" id="breakeven-fill" style="width:0%"></div></div>
-            <div class="bar-labels"><span>0 L</span><span id="bar-max">100 L</span></div>
-          </div>
+          <div class="stats-grid" id="stats-grid" style="display:none"></div>
           <div class="cost-breakdown" id="cost-breakdown" style="display:none"></div>
-          <div class="notice">⚠️ Prijzen zijn indicatief. NL via ANWB, DE via Tankerkönig (gratis API-key vereist), BE op basis van marktgemiddelden. Controleer altijd ter plaatse. Wegafstand = luchtlijn × 1,3.</div>
         </div>
       </div>
     </div>
@@ -247,6 +275,12 @@
 </div>
 
 <script>
+// ===== LOCAL STORAGE =====
+const LS = {
+  save(k, v) { try { localStorage.setItem('ts_' + k, JSON.stringify(v)); } catch(e){} },
+  load(k)    { try { return JSON.parse(localStorage.getItem('ts_' + k)); } catch(e){ return null; } }
+};
+
 // ===== STATE =====
 let unit = 'l100';
 let selectedCountry = null; // auto-detected from coordinates
@@ -254,9 +288,10 @@ let stationNL = null;
 let stationForeign = null;
 let map, markerNL, markerForeign, routeLine;
 let searchTimers = {};
+let routeCache = null; // cached OSRM result { lat1,lng1,lat2,lng2, distanceKm, durationMin, geometry }
 let mapMarkers = [];       // markers from station list (both sides)
-let browseMarkers = [];    // markers from map browse (background layer)
-let favorites = [];
+const sessionStations = new Map(); // key=lat,lng → { station data + _marker ref } — persists all session
+let favorites = LS.load('favorites') || [];
 let browseDebounceTimer = null;
 let lastBrowseBounds = null;
 
@@ -265,6 +300,52 @@ const CINFO = {
   de:{ flag:'🇩🇪', label:'Duitsland', cc:'de', color:'var(--de)', cls:'de' },
   be:{ flag:'🇧🇪', label:'België',    cc:'be', color:'var(--be)', cls:'be' }
 };
+
+// ===== BORDER CROSSINGS =====
+// 20 DE + 10 BE points just inside the border, spread along the full NL border (north → south)
+const BORDER_CROSSINGS = [
+  // ── Duitsland (20) — van Groningen tot Vaals ──────────────────────────────
+  { name: 'Bunde',             lat: 53.177, lng: 7.267, country: 'de' }, // bij Nieuweschans (Gr)
+  { name: 'Twist',             lat: 52.638, lng: 7.076, country: 'de' }, // bij Ter Apel (Dr)
+  { name: 'Emlichheim',        lat: 52.612, lng: 6.844, country: 'de' }, // bij Coevorden (Dr)
+  { name: 'Uelsen',            lat: 52.502, lng: 6.896, country: 'de' }, // bij Hardenberg (Ov)
+  { name: 'Nordhorn',          lat: 52.431, lng: 7.069, country: 'de' }, // bij Denekamp (Ov)
+  { name: 'Bad Bentheim',      lat: 52.304, lng: 7.159, country: 'de' }, // bij Oldenzaal (Ov)
+  { name: 'Gronau',            lat: 52.212, lng: 7.031, country: 'de' }, // bij Enschede (Ov)
+  { name: 'Ahaus',             lat: 52.077, lng: 7.005, country: 'de' }, // bij Haaksbergen (Ov)
+  { name: 'Vreden',            lat: 51.974, lng: 6.836, country: 'de' }, // bij Winterswijk (Gld)
+  { name: 'Bocholt',           lat: 51.838, lng: 6.615, country: 'de' }, // bij Aalten (Gld)
+  { name: 'Rees',              lat: 51.761, lng: 6.398, country: 'de' }, // bij Zevenaar (Gld)
+  { name: 'Emmerich am Rhein', lat: 51.836, lng: 6.245, country: 'de' }, // bij Arnhem (Gld)
+  { name: 'Kleve',             lat: 51.788, lng: 6.140, country: 'de' }, // bij Nijmegen (Gld)
+  { name: 'Goch',              lat: 51.679, lng: 6.161, country: 'de' }, // bij Gennep (Lb-N)
+  { name: 'Straelen',          lat: 51.447, lng: 6.274, country: 'de' }, // bij Venlo (Lb)
+  { name: 'Viersen',           lat: 51.254, lng: 6.393, country: 'de' }, // bij Roermond (Lb)
+  { name: 'Wegberg',           lat: 51.140, lng: 6.279, country: 'de' }, // bij Roermond-Z (Lb)
+  { name: 'Heinsberg',         lat: 51.063, lng: 6.100, country: 'de' }, // bij Sittard (Lb)
+  { name: 'Gangelt',           lat: 51.016, lng: 5.991, country: 'de' }, // bij Sittard-Geleen (Lb)
+  { name: 'Aachen',            lat: 50.776, lng: 6.083, country: 'de' }, // bij Vaals (Lb)
+  // ── België (10) — van Roosendaal tot Maastricht ───────────────────────────
+  { name: 'Kalmthout',         lat: 51.396, lng: 4.466, country: 'be' }, // bij Roosendaal (NB)
+  { name: 'Ravels',            lat: 51.378, lng: 4.997, country: 'be' }, // bij Breda (NB)
+  { name: 'Turnhout',          lat: 51.323, lng: 4.944, country: 'be' }, // bij Tilburg (NB)
+  { name: 'Mol',               lat: 51.197, lng: 5.115, country: 'be' }, // bij Eindhoven-W (NB)
+  { name: 'Lommel',            lat: 51.228, lng: 5.312, country: 'be' }, // bij Valkenswaard (NB)
+  { name: 'Neerpelt',          lat: 51.219, lng: 5.432, country: 'be' }, // bij Budel (NB/Lb)
+  { name: 'Hamont',            lat: 51.247, lng: 5.544, country: 'be' }, // bij Weert (Lb)
+  { name: 'Bree',              lat: 51.141, lng: 5.594, country: 'be' }, // bij Weert-Z (Lb)
+  { name: 'Maaseik',           lat: 51.098, lng: 5.790, country: 'be' }, // bij Roermond (Lb)
+  { name: 'Lanaken',           lat: 50.879, lng: 5.636, country: 'be' }, // bij Maastricht (Lb)
+];
+
+function findNearestBorderCrossing(lat, lng) {
+  let nearest = null, minDist = Infinity;
+  BORDER_CROSSINGS.forEach(bc => {
+    const d = haversine(lat, lng, bc.lat, bc.lng);
+    if (d < minDist) { minDist = d; nearest = bc; }
+  });
+  return { crossing: nearest, distance: minDist };
+}
 
 // ===== TABS =====
 function switchTab(t) {
@@ -280,6 +361,7 @@ function setUnit(u) {
   document.getElementById('btn-l100').classList.toggle('active', u==='l100');
   document.getElementById('btn-kml').classList.toggle('active', u==='kml');
   document.getElementById('economy').placeholder = u==='l100' ? '7.0' : '14.3';
+  LS.save('unit', u);
 }
 
 // ===== MAP =====
@@ -321,6 +403,15 @@ async function fetchMapBrowse() {
   const country = await detectCountry(lat, lng);
   if (!country) { hint.textContent = ''; return; }
 
+  // Skip fetch if session already has good coverage for this area
+  let nearbyCount = 0;
+  sessionStations.forEach(s => { if (s.country === country && haversine(lat, lng, s.lat, s.lng) < 6) nearbyCount++; });
+  if (nearbyCount >= 8) {
+    hint.textContent = '';
+    return; // enough stations already loaded for this area
+  }
+
+
   let stations = [];
   try {
     if (country === 'nl') {
@@ -342,7 +433,7 @@ async function fetchMapBrowse() {
       if (data.ok) {
         stations = (data.stations||[]).map(s => ({
           name: s.brand||s.name||'Station', lat: s.lat, lng: s.lng,
-          price: s[type]>0 ? s[type] : (s.e5>0 ? s.e5 : null),
+          price: s.price>0 ? s.price : (s[type]>0 ? s[type] : null),
           country: 'de'
         })).filter(s => s.lat && s.lng);
       }
@@ -364,6 +455,30 @@ async function fetchMapBrowse() {
   setTimeout(() => { if (hint.textContent.includes('in beeld')) hint.textContent = ''; }, 2500);
 }
 
+
+// ===== SESSION PRICE DATA =====
+// Returns the price range of all session-observed stations for a country, or null if too few
+function getSessionPriceRange(country) {
+  const prices = [];
+  sessionStations.forEach(s => {
+    if (s.country === country) {
+      const p = parseFloat(s.price);
+      if (!isNaN(p) && p > 0) prices.push(p);
+    }
+  });
+  if (prices.length < 2) return null;
+  return { min: Math.min(...prices), max: Math.max(...prices) };
+}
+
+// Add an array of stations to the session store (for scale calculation; no markers created here)
+function addToSession(stations) {
+  stations.forEach(s => {
+    if (!s.lat || !s.lng) return;
+    const key = `${parseFloat(s.lat).toFixed(4)},${parseFloat(s.lng).toFixed(4)}`;
+    if (!sessionStations.has(key)) sessionStations.set(key, { ...s, _marker: null });
+  });
+}
+
 // Detect which country the map center is in via Nominatim (cached)
 const countryCache = {};
 async function detectCountry(lat, lng) {
@@ -379,27 +494,45 @@ async function detectCountry(lat, lng) {
   } catch(e) { return null; }
 }
 
-// Render browse markers — smaller dots, separate layer, don't touch mapMarkers
+// Render browse markers — accumulates across the session; re-colors all same-country dots
+// when the price range expands, so the scale stays consistent.
 function renderBrowseMarkers(stations, country) {
-  browseMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
-  browseMarkers = [];
   if (!stations.length) return;
 
-  const prices = stations.map(s => parseFloat(s.price)).filter(p => !isNaN(p) && p > 0);
-  const minPrice = prices.length ? Math.min(...prices) : 0;
-  const maxPrice = prices.length ? Math.max(...prices) : 0;
-
+  // 1. Add new stations to session store
+  let addedAny = false;
   stations.forEach(s => {
     if (!s.lat || !s.lng) return;
-    const dotColor = priceColor(parseFloat(s.price), minPrice, maxPrice);
-    const prStr = s.price ? '€ ' + parseFloat(s.price).toFixed(3) : '—';
-    const icon = L.divIcon({
-      html: `<div style="width:10px;height:10px;background:${dotColor};border:1.5px solid rgba(255,255,255,0.65);border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer"></div>`,
-      className: '', iconSize: [10,10], iconAnchor: [5,5]
-    });
-    const m = L.marker([s.lat, s.lng], { icon, zIndexOffset: -100 }).addTo(map)
-      .bindPopup(`<b>${s.name}</b><br><b style="color:${dotColor};font-size:15px">${prStr}</b>`);
-    browseMarkers.push(m);
+    const key = `${parseFloat(s.lat).toFixed(4)},${parseFloat(s.lng).toFixed(4)}`;
+    if (!sessionStations.has(key)) {
+      sessionStations.set(key, { ...s, _marker: null });
+      addedAny = true;
+    }
+  });
+
+  if (!addedAny) return;
+
+  // 2. Recalculate session-wide price range for this country
+  const range = getSessionPriceRange(country);
+  if (!range) return;
+
+  // 3. Create or re-color ALL session markers of this country (range may have shifted)
+  const dotHtml = (color) =>
+    `<div style="width:10px;height:10px;background:${color};border:1.5px solid rgba(255,255,255,0.65);border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer"></div>`;
+
+  sessionStations.forEach(sd => {
+    if (sd.country !== country) return;
+    const color = priceColor(parseFloat(sd.price), range.min, range.max);
+    const prStr = sd.price ? '€ ' + parseFloat(sd.price).toFixed(3) : '—';
+    const icon = L.divIcon({ html: dotHtml(color), className: '', iconSize: [10,10], iconAnchor: [5,5] });
+
+    if (sd._marker) {
+      sd._marker.setIcon(icon); // re-color existing dot
+    } else {
+      sd._marker = L.marker([sd.lat, sd.lng], { icon, zIndexOffset: -100 })
+        .addTo(map)
+        .bindPopup(`<b>${sd.name}</b><br><b style="color:${color};font-size:15px">${prStr}</b>`);
+    }
   });
 }
 
@@ -460,7 +593,9 @@ async function lookupKenteken() {
       const ft = (fd[0].brandstof_omschrijving||'').toLowerCase();
       document.getElementById('fueltype').value = ft.includes('diesel') ? 'diesel' : 'euro95';
     }
-    document.getElementById('kenteken').value = raw.match(/.{1,2}/g).join('-');
+    const formatted = raw.match(/.{1,2}/g).join('-');
+    document.getElementById('kenteken').value = formatted;
+    LS.save('kenteken', formatted);
     document.getElementById('kenteken').style.borderColor='var(--accent)';
     setTimeout(()=>document.getElementById('kenteken').style.borderColor='',1500);
   } catch(e) { errEl.style.display='block'; }
@@ -516,9 +651,10 @@ const PROXY_URL = 'https://tankslim-proxy.fradoum99.workers.dev';
 
 async function fetchANWB(lat, lng) {
   const fuel = document.getElementById('fueltype').value;
-  // Map app fuel type to ANWB fuelType values
   const anwbFuel = fuel === 'diesel' ? 'DIESEL' : 'EURO95';
   let stations;
+
+
   try {
     const r = await fetch(`${PROXY_URL}?lat=${lat}&lng=${lng}&radius=5000&fuel=${anwbFuel}`);
     const data = await r.json();
@@ -527,15 +663,13 @@ async function fetchANWB(lat, lng) {
     if (!Array.isArray(data)) throw new Error('Onverwacht formaat: ' + JSON.stringify(data).slice(0,100));
 
     stations = data.slice(0, 50).map(s => {
-      // prices[] bevat objecten met fuelType (EURO95/DIESEL) en value
       const matchFuel = (s.prices || []).find(p => p.fuelType === anwbFuel && p.value > 0);
       const lat = parseFloat(s.lat);
       const lng = parseFloat(s.lng);
       return {
         name:    s.name || 'Station',
         address: s.address || '',
-        lat,
-        lng,
+        lat, lng,
         price:   matchFuel ? matchFuel.value.toFixed(3) : null,
         country: 'nl'
       };
@@ -554,21 +688,20 @@ async function fetchTK(lat, lng) {
   const fuel = document.getElementById('fueltype').value;
   const type = fuel === 'diesel' ? 'diesel' : 'e10';
   let stations;
+
+
   try {
-    const proxyUrl = `${PROXY_URL}?source=tk&lat=${lat}&lng=${lng}&rad=8&type=${type}`;
-    const r    = await fetch(proxyUrl);
+    const r = await fetch(`${PROXY_URL}?source=tk&lat=${lat}&lng=${lng}&rad=8&type=${type}`);
     const data = await r.json();
     if (!data.ok) throw new Error(data.message || JSON.stringify(data).slice(0, 100));
 
     const list = data.stations || [];
     if (!list.length) throw new Error('Geen stations gevonden in dit gebied');
 
-    // Prices are directly on the station object: s.e10, s.diesel, s.e5
     stations = list.slice(0, 50).map(s => ({
       name:    s.brand || s.name || 'Station',
       address: [s.street, s.houseNumber, s.postCode, s.place].filter(Boolean).join(' '),
-      lat:     s.lat,
-      lng:     s.lng,
+      lat:     s.lat, lng: s.lng,
       price:   s.price > 0 ? s.price : null,
       country: 'de'
     })).filter(s => s.lat && s.lng);
@@ -576,7 +709,7 @@ async function fetchTK(lat, lng) {
     if (!stations.length) throw new Error('Geen geldige stations in response');
   } catch(e) {
     addNote('stations-foreign-list', '⚠️ Duitsland fout: ' + e.message + '. Demoprijzen getoond.');
-    stations = demoStations(lat, lng, 'de', document.getElementById('fueltype').value);
+    stations = demoStations(lat, lng, 'de', fuel);
   }
   renderList(stations, 'foreign', lat, lng);
 }
@@ -584,14 +717,12 @@ async function fetchTK(lat, lng) {
 // ----- BE: Grid.com via Cloudflare proxy -----
 async function fetchBE(lat, lng) {
   const fuel = document.getElementById('fueltype').value;
-  // Grid API fuelType: 'Gasoline' for benzine, 'Diesel' for diesel
   const fuelType = fuel === 'diesel' ? 'Diesel' : 'Gasoline';
-  // Map Grid price type to what we want
-  const priceType = fuel === 'diesel' ? 'Diesel' : 'Gasoline';
   let stations;
+
+
   try {
-    const proxyUrl = `${PROXY_URL}?source=be&lat=${lat}&lng=${lng}&rad=8&fuelType=${fuelType}`;
-    const r    = await fetch(proxyUrl);
+    const r = await fetch(`${PROXY_URL}?source=be&lat=${lat}&lng=${lng}&rad=8&fuelType=${fuelType}`);
     const data = await r.json();
     if (!data.success) throw new Error('Grid API niet ok');
 
@@ -599,16 +730,14 @@ async function fetchBE(lat, lng) {
     if (!markers.length) throw new Error('Geen stations gevonden');
 
     stations = markers.map(s => {
-      // Find matching price for selected fuel type
       const priceObj = (s.prices || []).find(p =>
-        p.type === priceType && p.currency?.code === 'EUR' && p.price > 0
+        p.type === fuelType && p.currency?.code === 'EUR' && p.price > 0
       ) || (s.prices || [])[0];
       return {
         id:      s.id,
         name:    s.name || s.brand || 'Station',
         address: [s.address?.street, s.address?.city].filter(Boolean).join(', ') || '',
-        lat:     s.coordinates?.latitude,
-        lng:     s.coordinates?.longitude,
+        lat:     s.coordinates?.latitude, lng: s.coordinates?.longitude,
         price:   priceObj?.price ?? null,
         country: 'be'
       };
@@ -685,10 +814,14 @@ function renderList(stations, side, searchLat, searchLng) {
     return pa - pb;
   });
 
-  // Price range for gradient
-  const prices = sorted.map(s => parseFloat(s.price)).filter(p => !isNaN(p) && p > 0);
-  const minPrice = prices.length ? Math.min(...prices) : 0;
-  const maxPrice = prices.length ? Math.max(...prices) : 0;
+  // Add to session store so these prices contribute to the global color scale
+  addToSession(stations);
+
+  // Use session-wide price range for this country; fall back to local range if session has too few
+  const localPrices = sorted.map(s => parseFloat(s.price)).filter(p => !isNaN(p) && p > 0);
+  const sessionRange = getSessionPriceRange(country);
+  const minPrice = sessionRange ? sessionRange.min : (localPrices.length ? Math.min(...localPrices) : 0);
+  const maxPrice = sessionRange ? sessionRange.max : (localPrices.length ? Math.max(...localPrices) : 0);
 
   // Find cheapest price for highlighting
   const cheapestPrice = sorted.find(s => s.price)?.price;
@@ -846,6 +979,7 @@ function listFav(btn, s, country) {
 
 // ===== SELECT STATION =====
 function selectStation(s, side) {
+  routeCache = null; // invalidate cached route whenever a station changes
   if (side==='nl') {
     stationNL=s;
     document.getElementById('selected-nl').style.display='block';
@@ -855,6 +989,9 @@ function selectStation(s, side) {
     document.getElementById('star-nl').textContent=favorites.some(f=>f.name===s.name)?'⭐':'☆';
     if (markerNL) map.removeLayer(markerNL);
     markerNL=L.circleMarker([s.lat,s.lng],{radius:11,color:'#ff6b35',fillColor:'#ff6b35',fillOpacity:.9,weight:3}).addTo(map);
+    LS.save('homestation', s);
+    // Auto-search nearest border crossing
+    autoSearchBorder(s.lat, s.lng);
   } else {
     stationForeign=s;
     const c=s.country||selectedCountry, info=CINFO[c];
@@ -872,6 +1009,70 @@ function selectStation(s, side) {
   if (stationNL&&stationForeign) { drawRoute(); document.getElementById('calc-btn').disabled=false; }
 }
 
+// ===== AUTO BORDER SEARCH =====
+async function autoSearchBorder(nlLat, nlLng) {
+  // Sort ALL crossings by distance, pick the nearest
+  const sorted = BORDER_CROSSINGS
+    .map(bc => ({ ...bc, dist: haversine(nlLat, nlLng, bc.lat, bc.lng) }))
+    .sort((a, b) => a.dist - b.dist);
+
+  const crossing = sorted[0];
+  if (!crossing) return;
+
+  const info = CINFO[crossing.country];
+
+  // Update country state and panel label
+  selectedCountry = crossing.country;
+  const lbl = document.getElementById('foreign-country-label');
+  if (lbl) lbl.textContent = '· ' + info.flag + ' ' + info.label;
+
+  // Pre-fill the search field
+  document.getElementById('search-foreign').value = crossing.name;
+
+  // Build alternative city pills — next 3 closest (any country)
+  const alts = sorted.slice(1, 4);
+  const altBtns = alts.map(bc => {
+    const altInfo = CINFO[bc.country];
+    return `<button onclick="switchBorderCity(${bc.lat},${bc.lng},'${bc.country}','${bc.name}')"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:20px;color:var(--muted);
+             font-family:var(--font);font-size:11px;padding:4px 10px;cursor:pointer;transition:all .2s;white-space:nowrap"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      ${altInfo.flag} ${bc.name} <span style="opacity:.6">${Math.round(bc.dist)} km</span>
+    </button>`;
+  }).join('');
+
+  // Show notice with alternatives
+  const listEl = document.getElementById('stations-foreign-list');
+  listEl.innerHTML = `
+    <div style="font-size:12px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;margin-bottom:8px;line-height:1.9">
+      <span style="color:var(--accent)">🤖 Dichtstbijzijnde grensplaats:</span>
+      <b style="color:var(--text)">${info.flag} ${crossing.name}</b>
+      <span style="color:var(--muted)"> · ${Math.round(crossing.dist)} km</span><br>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <span style="font-size:11px;color:var(--muted);align-self:center">Ook proberen:</span>
+        ${altBtns}
+      </div>
+    </div>`;
+
+  // Pan map to border area
+  map.setView([crossing.lat, crossing.lng], 12);
+
+  // Fetch border stations
+  await fetchStationsNearby(crossing.lat, crossing.lng, 'foreign');
+}
+
+// Called when user clicks an alternative border city pill
+async function switchBorderCity(lat, lng, country, name) {
+  selectedCountry = country;
+  const info = CINFO[country];
+  const lbl = document.getElementById('foreign-country-label');
+  if (lbl) lbl.textContent = '· ' + info.flag + ' ' + info.label;
+  document.getElementById('search-foreign').value = name;
+  map.setView([lat, lng], 12);
+  await fetchStationsNearby(lat, lng, 'foreign');
+}
+
 // ===== TOGGLE FAV (selected) =====
 function toggleFav(side) {
   const s=side==='nl'?stationNL:stationForeign; if(!s) return;
@@ -886,18 +1087,66 @@ function toggleFav(side) {
 function updateFavBadge() {
   const b=document.getElementById('fav-badge');
   b.textContent=favorites.length?'('+favorites.length+')':'';
+  LS.save('favorites', favorites);
+}
+
+// ===== ROUTING (OSRM) =====
+async function fetchRoute(lat1, lng1, lat2, lng2) {
+  // Return cached result if stations haven't changed
+  if (routeCache &&
+      routeCache.lat1 === lat1 && routeCache.lng1 === lng1 &&
+      routeCache.lat2 === lat2 && routeCache.lng2 === lng2) {
+    return routeCache;
+  }
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data.code !== 'Ok' || !data.routes?.length) throw new Error('no route');
+    const route = data.routes[0];
+    routeCache = {
+      lat1, lng1, lat2, lng2,
+      distanceKm:  route.distance / 1000,
+      durationMin: Math.round(route.duration / 60),
+      geometry:    route.geometry   // GeoJSON LineString
+    };
+    return routeCache;
+  } catch(e) {
+    // Graceful fallback: straight-line × 1.3
+    const lucht = haversine(lat1, lng1, lat2, lng2);
+    routeCache = { lat1, lng1, lat2, lng2,
+      distanceKm: lucht * 1.3, durationMin: null, geometry: null };
+    return routeCache;
+  }
 }
 
 // ===== DRAW ROUTE =====
-function drawRoute() {
-  if (routeLine) map.removeLayer(routeLine);
-  if (!stationNL||!stationForeign) return;
-  routeLine=L.polyline([[stationNL.lat,stationNL.lng],[stationForeign.lat,stationForeign.lng]],{color:'#fff',weight:2,opacity:.2,dashArray:'6 9'}).addTo(map);
-  map.fitBounds(L.latLngBounds([[stationNL.lat,stationNL.lng],[stationForeign.lat,stationForeign.lng]]),{padding:[60,60]});
+async function drawRoute() {
+  if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+  if (!stationNL || !stationForeign) return;
+
+  const route = await fetchRoute(
+    stationNL.lat, stationNL.lng, stationForeign.lat, stationForeign.lng
+  );
+
+  if (route.geometry) {
+    // Draw actual road geometry (GeoJSON coords are [lng, lat] → flip to [lat, lng])
+    const latlngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    routeLine = L.polyline(latlngs, {
+      color: 'var(--accent)', weight: 3, opacity: 0.55
+    }).addTo(map);
+  } else {
+    // Fallback: dashed straight line
+    routeLine = L.polyline(
+      [[stationNL.lat, stationNL.lng], [stationForeign.lat, stationForeign.lng]],
+      { color: '#fff', weight: 2, opacity: 0.2, dashArray: '6 9' }
+    ).addTo(map);
+  }
+  map.fitBounds(routeLine.getBounds(), { padding: [60, 60] });
 }
 
 // ===== CALCULATE =====
-function calculate() {
+async function calculate() {
   if (!stationNL||!stationForeign) return;
   const econRaw=parseFloat(document.getElementById('economy').value);
   if (isNaN(econRaw)||econRaw<=0) return alert('Voer een geldig verbruik in.');
@@ -909,9 +1158,22 @@ function calculate() {
   const fuelLabel=fuel==='diesel'?'Diesel':'Benzine (E10)';
   const c=stationForeign.country||selectedCountry, info=CINFO[c];
 
-  // Distances
-  const lucht=haversine(stationNL.lat,stationNL.lng,stationForeign.lat,stationForeign.lng);
-  const wegKm=lucht*1.30, roundtrip=wegKm*2;
+  // Show loading state on button
+  const btn = document.getElementById('calc-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Route ophalen…';
+
+  // Real road distance via OSRM
+  const route = await fetchRoute(
+    stationNL.lat, stationNL.lng, stationForeign.lat, stationForeign.lng
+  );
+  const wegKm = route.distanceKm;
+  const roundtrip = wegKm * 2;
+  const durationMin = route.durationMin; // null if fallback
+  const isEstimated = !route.geometry;
+
+  btn.disabled = false;
+  btn.innerHTML = 'Bereken break-even punt';
 
   // Omrijkosten: alleen brandstof, geen afschrijving
   const omrijL=(roundtrip/100)*l100;
@@ -933,41 +1195,83 @@ function calculate() {
     panel.classList.add('show'); return;
   }
 
-  const s50=(50*diff-omrijEur), s60=(60*diff-omrijEur), s75=(75*diff-omrijEur);
+  const scenarios = [40, 50, 60, 75].map(l => ({ l, net: l * diff - omrijEur }));
+
+  const priceColorCls = c === 'be' ? 'be' : 'de';
 
   document.getElementById('result-content').innerHTML=`
     <div class="result-hero">
-      <div class="result-number">${isFinite(breakEven)?breakEven.toFixed(1):'∞'}</div>
-      <div><div class="result-unit">liter</div><div class="result-label">minimaal tanken voor break-even</div></div>
+      <div class="result-number">${isFinite(breakEven) ? breakEven.toFixed(1) : '∞'}</div>
+      <div>
+        <div class="result-unit">liter</div>
+        <div class="result-label">minimaal tanken voor break-even</div>
+      </div>
     </div>
-    <div class="distance-badge">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 5l7 7-7 7"/></svg>
-      Luchtlijn <span>${lucht.toFixed(1)} km</span> · Wegschatting <span>~${wegKm.toFixed(0)} km</span> · Roundtrip <span>~${roundtrip.toFixed(0)} km</span>
-    </div>`;
+    <div class="breakeven-bar"><div class="breakeven-fill" id="breakeven-fill" style="width:0%"></div></div>
+    <div class="bar-labels"><span>0 L</span><span id="bar-max"></span></div>
 
-  document.getElementById('stats-grid').innerHTML=`
-    <div class="stat-card"><div class="stat-label">🇳🇱 NL prijs</div><div class="stat-value orange">€ ${pNL.toFixed(3)}</div></div>
-    <div class="stat-card"><div class="stat-label">${info.flag} ${info.label}</div><div class="stat-value ${c==='be'?'yellow':'green'}">€ ${pF.toFixed(3)}</div></div>
-    <div class="stat-card"><div class="stat-label">Besparing/liter</div><div class="stat-value green">€ ${diff.toFixed(3)}</div></div>
-    <div class="stat-card"><div class="stat-label">Omrijbrandstof</div><div class="stat-value">${omrijL.toFixed(2)} L</div></div>
-    <div class="stat-card"><div class="stat-label">Winst bij 50 L</div><div class="stat-value ${s50>0?'green':'orange'}">€ ${s50.toFixed(2)}</div></div>
-    <div class="stat-card"><div class="stat-label">Winst bij 60 L</div><div class="stat-value ${s60>0?'green':'orange'}">€ ${s60.toFixed(2)}</div></div>
-    <div class="stat-card"><div class="stat-label">Winst bij 75 L</div><div class="stat-value ${s75>0?'green':'orange'}">€ ${s75.toFixed(2)}</div></div>
-    <div class="stat-card"><div class="stat-label">Omrijkosten</div><div class="stat-value orange">€ ${omrijEur.toFixed(2)}</div></div>`;
+    <!-- Prijsvergelijking -->
+    <div class="res-section">
+      <div class="res-section-title">Prijsvergelijking</div>
+      <div class="price-compare">
+        <div class="price-compare-cell">
+          <div class="pcc-label">🇳🇱 Nederland</div>
+          <div class="pcc-value nl">€ ${pNL.toFixed(3)}</div>
+        </div>
+        <div class="price-compare-cell">
+          <div class="pcc-label">${info.flag} ${info.label}</div>
+          <div class="pcc-value ${priceColorCls}">€ ${pF.toFixed(3)}</div>
+        </div>
+        <div class="price-compare-cell">
+          <div class="pcc-label">Besparing / L</div>
+          <div class="pcc-value save">€ ${diff.toFixed(3)}</div>
+        </div>
+      </div>
+    </div>
 
-  const breakdown=document.getElementById('cost-breakdown');
-  breakdown.style.display='block';
-  breakdown.innerHTML=`
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Kostenberekening (alleen brandstof, geen afschrijving)</div>
-    <div class="cost-row"><span class="lbl">Roundtrip wegafstand</span><span class="val">~${roundtrip.toFixed(0)} km</span></div>
-    <div class="cost-row"><span class="lbl">Brandstof onderweg</span><span class="val">${omrijL.toFixed(2)} L × € ${pF.toFixed(3)}</span></div>
-    <div class="cost-row"><span class="lbl">Omrijkosten totaal</span><span class="val" style="color:var(--accent2)">€ ${omrijEur.toFixed(2)}</span></div>
-    <div class="cost-row"><span class="lbl">Besparing per liter getankt</span><span class="val">€ ${diff.toFixed(3)}</span></div>
-    <div class="cost-row total"><span class="lbl">Break-even tankbeurt</span><span class="val" style="color:var(--accent)">${isFinite(breakEven)?breakEven.toFixed(1):'∞'} L</span></div>`;
+    <!-- Reiskosten -->
+    <div class="res-section">
+      <div class="res-section-title">Reiskosten</div>
+      <div class="trip-row">
+        <div class="trip-cell">
+          <div class="trip-cell-label">Afstand retour${isEstimated ? ' <span style="color:var(--accent2);font-size:9px">SCHATTING</span>' : ''}</div>
+          <div class="trip-cell-value">${isEstimated ? '~' : ''}${roundtrip.toFixed(0)} km</div>
+          <div class="trip-cell-sub">enkel ${isEstimated ? '~' : ''}${wegKm.toFixed(0)} km${durationMin ? ' · ±' + durationMin + ' min rijden' : ''}</div>
+        </div>
+        <div class="trip-cell">
+          <div class="trip-cell-label">Brandstof onderweg</div>
+          <div class="trip-cell-value">${omrijL.toFixed(2)} L</div>
+          <div class="trip-cell-sub">${omrijL.toFixed(2)} L × € ${pF.toFixed(3)}</div>
+        </div>
+        <div class="trip-cell" style="border-color:rgba(255,107,53,.4)">
+          <div class="trip-cell-label">Totale omrijkosten</div>
+          <div class="trip-cell-value" style="color:var(--accent2)">€ ${omrijEur.toFixed(2)}</div>
+          <div class="trip-cell-sub">alleen brandstof, geen afschrijving</div>
+        </div>
+      </div>
+    </div>
 
-  const barMax=Math.max(80,Math.ceil(breakEven*1.6/10)*10);
-  document.getElementById('bar-max').textContent=barMax+' L';
-  document.getElementById('breakeven-fill').style.width=Math.min(100,(breakEven/barMax)*100)+'%';
+    <!-- Scenario's -->
+    <div class="res-section">
+      <div class="res-section-title">Wat verdien je netto?</div>
+      <div class="scenario-grid">
+        ${scenarios.map(s => `
+          <div class="scenario-card ${s.net > 0 ? 'win' : 'loss'}">
+            <div class="sc-liters">${s.l} liter</div>
+            <div class="sc-result ${s.net > 0 ? 'win' : 'loss'}">${s.net > 0 ? '+' : ''}€ ${s.net.toFixed(2)}</div>
+            <div class="sc-tag">${s.net > 0 ? '✓ lonend' : '✗ niet lonend'}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top:16px">⚠️ Prijzen zijn indicatief. Wegafstand = luchtlijn × 1,3. Geen autokosten meegerekend.</div>`;
+
+  document.getElementById('stats-grid').innerHTML = '';
+  document.getElementById('cost-breakdown').style.display = 'none';
+
+  const barMax = Math.max(80, Math.ceil(breakEven * 1.6 / 10) * 10);
+  document.getElementById('bar-max').textContent = barMax + ' L';
+  document.getElementById('breakeven-fill').style.width = Math.min(100, (breakEven / barMax) * 100) + '%';
   panel.classList.add('show');
 }
 
@@ -1020,8 +1324,47 @@ function haversine(lat1,lon1,lat2,lon2) {
   return R*2*Math.asin(Math.sqrt(a));
 }
 
+// ===== RESTORE SESSION =====
+function restoreSession() {
+  // Kenteken
+  const kenteken = LS.load('kenteken');
+  if (kenteken) document.getElementById('kenteken').value = kenteken;
+
+  // Brandstoftype
+  const fueltype = LS.load('fueltype');
+  if (fueltype) document.getElementById('fueltype').value = fueltype;
+
+  // Verbruikseenheid
+  const savedUnit = LS.load('unit');
+  if (savedUnit) setUnit(savedUnit);
+
+  // Verbruik
+  const economy = LS.load('economy');
+  if (economy !== null) document.getElementById('economy').value = economy;
+
+  // Thuisstation — re-select and auto-search border
+  const home = LS.load('homestation');
+  if (home?.lat && home?.lng) {
+    selectStation(home, 'nl');
+    map.setView([home.lat, home.lng], 12);
+  }
+
+  // Save fueltype on change
+  document.getElementById('fueltype').addEventListener('change', () =>
+    LS.save('fueltype', document.getElementById('fueltype').value)
+  );
+
+  // Save economy on change (debounced so we don't spam on every keystroke)
+  let econTimer;
+  document.getElementById('economy').addEventListener('input', () => {
+    clearTimeout(econTimer);
+    econTimer = setTimeout(() => LS.save('economy', document.getElementById('economy').value), 600);
+  });
+}
+
 // ===== INIT =====
 initMap();
+restoreSession();
 </script>
 </body>
 </html>

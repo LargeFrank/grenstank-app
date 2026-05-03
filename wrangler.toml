@@ -13,3 +13,19 @@ compatibility_date = "2024-01-01"
 # For local development, create a .dev.vars file (see
 # .dev.vars.example) — it is gitignored and never committed.
 # ─────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────
+# KV Cache — shared price cache across all users (2-hour TTL)
+#
+# Create the namespace once:
+#   wrangler kv namespace create "TANKSLIM_PRICE_CACHE"
+#
+# Paste the returned id below.
+# For local dev, also run:
+#   wrangler kv namespace create "TANKSLIM_PRICE_CACHE" --preview
+# and paste that id as preview_id.
+# ─────────────────────────────────────────────────────────────
+[[kv_namespaces]]
+binding    = "TANKSLIM_PRICE_CACHE"
+id         = "bb8d183e2de846b4a0ff86f2289a058f"
+# preview_id = "REPLACE_WITH_YOUR_PREVIEW_KV_NAMESPACE_ID"
