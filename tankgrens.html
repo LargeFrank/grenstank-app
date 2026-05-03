@@ -44,12 +44,18 @@
   .toggle-btn{flex:1;padding:8px;border:none;border-radius:5px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:13px;cursor:pointer;transition:all .2s;}
   .toggle-btn.active{background:var(--accent);color:#000;font-weight:600;}
 
-  .station-block{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative;}
+  .station-block{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative;transition:border-color .2s,box-shadow .2s;}
+  .station-block.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,160,.2);background:rgba(0,229,160,.04);}
+  .station-selected-badge{display:none;position:absolute;top:-1px;left:14px;background:var(--accent);color:#000;font-size:10px;font-weight:700;padding:2px 9px;border-radius:0 0 7px 7px;letter-spacing:.05em;}
+  .station-block.selected .station-selected-badge{display:block;}
   .station-flag{font-size:20px;position:absolute;top:12px;right:36px;}
   .station-name{font-size:14px;font-weight:600;margin:4px 0 2px;}
   .station-price{font-family:var(--mono);font-size:22px;font-weight:500;}
   .station-price.nl{color:var(--nl);}.station-price.de{color:var(--de);}.station-price.be{color:var(--be);}
   .station-addr{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  /* Pulsing selected-station map marker */
+  @keyframes markerPulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55);}70%{box-shadow:0 0 0 10px rgba(255,255,255,0);}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}}
 
   .locate-btn{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:8px 14px;cursor:pointer;transition:all .2s;width:100%;justify-content:center;margin-bottom:10px;}
   .locate-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -218,7 +224,8 @@
             <input type="text" id="search-nl" placeholder="bijv. Venlo, Nijmegen…" oninput="geocodeSearch('nl')">
           </div>
           <div id="stations-nl-list"></div>
-          <div class="station-block" id="selected-nl" style="display:none">
+          <div class="station-block selected" id="selected-nl" style="display:none">
+            <div class="station-selected-badge">✓ Geselecteerd</div>
             <div class="station-flag">🇳🇱</div>
             <button class="star-btn" id="star-nl" onclick="toggleFav('nl')" title="Favoriet">☆</button>
             <div class="station-name" id="nl-name"></div>
@@ -239,7 +246,8 @@
             <input type="text" id="search-foreign" placeholder="bijv. Kleve, Antwerpen…" oninput="geocodeSearch('foreign')">
           </div>
           <div id="stations-foreign-list"></div>
-          <div class="station-block" id="selected-foreign" style="display:none">
+          <div class="station-block selected" id="selected-foreign" style="display:none">
+            <div class="station-selected-badge">✓ Geselecteerd</div>
             <div class="station-flag" id="foreign-flag">🇩🇪</div>
             <button class="star-btn" id="star-foreign" onclick="toggleFav('foreign')" title="Favoriet">☆</button>
             <div class="station-name" id="foreign-name"></div>
@@ -538,23 +546,25 @@ function renderBrowseMarkers(stations, country) {
 
 // ===== RDW KENTEKEN =====
 // Format license plate with dashes on every input change
-// Dutch plates: groups of letters/digits separated by dashes, e.g. AB-123-C, JD-40-8X
+// Dutch plates: groups of letters/digits separated by dashes, e.g. AB-123-C, JD-408-X
 function formatKenteken(input) {
   const pos = input.selectionStart;
   const raw = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8);
   // Determine dash positions from known Dutch plate patterns (longest match first)
   const patterns = [
-    /^([A-Z]{2})(\d{2})(\d{2})$/,         // AA-99-99
-    /^(\d{2})(\d{2})([A-Z]{2})$/,         // 99-99-AA
-    /^(\d{2})([A-Z]{2})(\d{2})$/,         // 99-AA-99
-    /^([A-Z]{2})(\d{2})([A-Z]{2})$/,      // AA-99-AA
-    /^([A-Z]{3})(\d{2})([A-Z])$/,         // AAA-99-A
-    /^([A-Z])(\d{2})([A-Z]{3})$/,         // A-99-AAA
-    /^(\d{2})([A-Z]{3})(\d)$/,            // 99-AAA-9
-    /^(\d)([A-Z]{3})(\d{2})$/,            // 9-AAA-99
-    /^([A-Z]{2})(\d{3})([A-Z])$/,         // AA-999-A
+    /^([A-Z]{2})(\d{2})(\d{2})$/,         // AA-99-99  (sidecode 1)
+    /^(\d{2})(\d{2})([A-Z]{2})$/,         // 99-99-AA  (sidecode 2)
+    /^(\d{2})([A-Z]{2})(\d{2})$/,         // 99-AA-99  (sidecode 3)
+    /^([A-Z]{2})(\d{2})([A-Z]{2})$/,      // AA-99-AA  (sidecode 4)
+    /^(\d{2})([A-Z]{2})([A-Z]{2})$/,      // 99-AA-AA  (sidecode 5)
+    /^([A-Z]{2})([A-Z]{2})(\d{2})$/,      // AA-AA-99  (sidecode 6)
+    /^([A-Z]{3})(\d{2})([A-Z])$/,         // AAA-99-A  (sidecode 7)
+    /^([A-Z])(\d{2})([A-Z]{3})$/,         // A-99-AAA  (sidecode 8)
+    /^(\d{2})([A-Z]{3})(\d)$/,            // 99-AAA-9  (sidecode 9)
+    /^(\d)([A-Z]{3})(\d{2})$/,            // 9-AAA-99  (sidecode 10)
+    /^([A-Z]{2})(\d{3})([A-Z])$/,         // AA-999-A  (sidecode 11)
     /^([A-Z])(\d{3})([A-Z]{2})$/,         // A-999-AA
-    /^(\d{2})([A-Z]{2})([A-Z])(\d)$/,     // 99-AA-A-9 (sidecars etc, skip)
+    /^(\d{2})([A-Z]{2})([A-Z])(\d)$/,     // 99-AA-A-9 (sidecars etc)
   ];
   let formatted = raw;
   for (const pat of patterns) {
@@ -988,7 +998,7 @@ function selectStation(s, side) {
     document.getElementById('nl-addr').textContent=s.address;
     document.getElementById('star-nl').textContent=favorites.some(f=>f.name===s.name)?'⭐':'☆';
     if (markerNL) map.removeLayer(markerNL);
-    markerNL=L.circleMarker([s.lat,s.lng],{radius:11,color:'#ff6b35',fillColor:'#ff6b35',fillOpacity:.9,weight:3}).addTo(map);
+    markerNL=L.marker([s.lat,s.lng],{icon:selectedIcon('#ff6b35'),zIndexOffset:1000}).addTo(map);
     LS.save('homestation', s);
     // Auto-search nearest border crossing
     autoSearchBorder(s.lat, s.lng);
@@ -1004,7 +1014,7 @@ function selectStation(s, side) {
     document.getElementById('foreign-addr').textContent=s.address;
     document.getElementById('star-foreign').textContent=favorites.some(f=>f.name===s.name)?'⭐':'☆';
     if (markerForeign) map.removeLayer(markerForeign);
-    markerForeign=L.circleMarker([s.lat,s.lng],{radius:11,color:info.color,fillColor:info.color,fillOpacity:.9,weight:3}).addTo(map);
+    markerForeign=L.marker([s.lat,s.lng],{icon:selectedIcon(info.color),zIndexOffset:1000}).addTo(map);
   }
   if (stationNL&&stationForeign) { drawRoute(); document.getElementById('calc-btn').disabled=false; }
 }
@@ -1118,6 +1128,23 @@ async function fetchRoute(lat1, lng1, lat2, lng2) {
       distanceKm: lucht * 1.3, durationMin: null, geometry: null };
     return routeCache;
   }
+}
+
+// Pulsing pin for selected stations — stands out clearly above browse dots
+function selectedIcon(color) {
+  return L.divIcon({
+    html: `<div style="
+      position:relative;width:20px;height:20px;
+      background:${color};
+      border:3px solid #fff;
+      border-radius:50%;
+      box-shadow:0 2px 8px rgba(0,0,0,.5);
+      animation:markerPulse 1.6s ease-out infinite;
+    "></div>`,
+    className: '',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
 }
 
 // ===== DRAW ROUTE =====
