@@ -1,0 +1,7 @@
+# Cloudflare Workers local secrets (used by wrangler dev)
+.dev.vars
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp

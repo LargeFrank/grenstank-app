@@ -1,0 +1,6 @@
+# Copy this file to .dev.vars for local wrangler dev.
+# .dev.vars is gitignored — never commit real keys.
+
+GRID_SUBSCRIPTION_KEY=your-grid-com-subscription-key-here
+ANWB_API_KEY=your-anwb-api-key-here
+TK_API_KEY=your-tankerkoenig-api-key-here

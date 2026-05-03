@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TankSlim — Grenstanken Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg:#0a0e0f;--surface:#131819;--surface2:#1c2223;--border:#2a3435;
+    --accent:#00e5a0;--accent2:#ff6b35;--be:#f7c948;
+    --text:#e8eeef;--muted:#6b7f82;--nl:#ff6b35;--de:#00e5a0;
+    --font:'Syne',sans-serif;--mono:'DM Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+  .app{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:24px 20px 80px;}
+
+  header{display:flex;align-items:baseline;gap:16px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .logo{font-size:28px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .logo-sub{font-size:13px;color:var(--muted);font-weight:400;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
+  .tab{padding:7px 20px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+  .tab.active{background:var(--surface2);color:var(--text);}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+
+  .grid{display:grid;grid-template-columns:390px 1fr;gap:20px;align-items:start;}
+  @media(max-width:800px){.grid{grid-template-columns:1fr;}}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px;}
+  .panel-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.04em;}
+  input[type="text"],input[type="number"],select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:15px;padding:10px 14px;outline:none;transition:border-color .2s;}
+  input:focus,select:focus{border-color:var(--accent);}
+  select option{background:var(--surface2);color:var(--text);}
+  .form-row{margin-bottom:14px;}
+
+  .toggle-wrap{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px;}
+  .toggle-btn{flex:1;padding:8px;border:none;border-radius:5px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:13px;cursor:pointer;transition:all .2s;}
+  .toggle-btn.active{background:var(--accent);color:#000;font-weight:600;}
+
+  .station-block{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative;}
+  .station-flag{font-size:20px;position:absolute;top:12px;right:36px;}
+  .station-name{font-size:14px;font-weight:600;margin:4px 0 2px;}
+  .station-price{font-family:var(--mono);font-size:22px;font-weight:500;}
+  .station-price.nl{color:var(--nl);}.station-price.de{color:var(--de);}.station-price.be{color:var(--be);}
+  .station-addr{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  .locate-btn{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:8px 14px;cursor:pointer;transition:all .2s;width:100%;justify-content:center;margin-bottom:10px;}
+  .locate-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  #map{height:420px;border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+
+  .result-panel{margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;display:none;}
+  .result-panel.show{display:block;animation:slideUp .4s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  .result-hero{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;}
+  .result-number{font-size:52px;font-weight:800;font-family:var(--mono);line-height:1;background:linear-gradient(135deg,var(--accent),#00b37a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .result-unit{font-size:18px;color:var(--muted);}
+  .result-label{font-size:13px;color:var(--muted);margin-top:4px;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-top:16px;}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .stat-label{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+  .stat-value{font-size:19px;font-family:var(--mono);font-weight:500;margin-top:4px;}
+  .stat-value.green{color:var(--accent);}.stat-value.orange{color:var(--accent2);}.stat-value.yellow{color:var(--be);}
+
+  .breakeven-bar{background:var(--surface2);border-radius:8px;height:6px;margin:14px 0 6px;overflow:hidden;}
+  .breakeven-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:8px;transition:width .8s cubic-bezier(.34,1.56,.64,1);}
+  .bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+  .fuel-badge{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;font-family:var(--mono);color:var(--accent);margin-bottom:14px;}
+
+  .calc-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b37a);border:none;border-radius:10px;color:#000;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px;}
+  .calc-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,229,160,.25);}
+  .calc-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  .divider{height:1px;background:var(--border);margin:16px 0;}
+
+  .spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .notice{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.7;}
+  .notice a{color:var(--accent);text-decoration:none;}
+
+  .distance-badge{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-family:var(--mono);padding:8px 12px;background:var(--surface2);border-radius:8px;margin-top:8px;flex-wrap:wrap;}
+  .distance-badge span{color:var(--text);font-weight:500;}
+
+  .error-msg{font-size:12px;color:var(--accent2);margin-top:6px;display:none;}
+
+  .star-btn{position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;font-size:18px;opacity:.45;transition:opacity .2s;line-height:1;}
+  .star-btn:hover,.star-btn.saved{opacity:1;}
+
+  /* Favorites */
+  .fav-empty{font-size:13px;color:var(--muted);text-align:center;padding:36px 20px;line-height:1.8;}
+  .fav-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+  .fav-info{flex:1;}
+  .fav-name{font-size:14px;font-weight:600;}
+  .fav-addr{font-size:11px;color:var(--muted);margin-top:2px;}
+  .fav-price{font-family:var(--mono);font-size:16px;margin-top:4px;}
+  .fav-actions{display:flex;gap:6px;flex-shrink:0;}
+  .fav-btn{padding:6px 11px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .fav-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .fav-btn.del:hover{border-color:var(--accent2);color:var(--accent2);}
+
+  /* Cost breakdown */
+  .cost-breakdown{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:14px;}
+  .cost-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+  .cost-row.total{border-top:1px solid var(--border);margin-top:8px;padding-top:10px;font-weight:700;font-size:15px;}
+  .cost-row .lbl{color:var(--muted);}
+  .cost-row .val{font-family:var(--mono);}
+
+  .leaflet-popup-content-wrapper{background:#ffffff!important;color:#1a1a1a!important;border:1px solid #cccccc!important;border-radius:10px!important;box-shadow:0 8px 24px rgba(0,0,0,.5)!important;}
+  .leaflet-popup-tip{background:#ffffff!important;}
+
+  /* Collapsible station list */
+  .station-list-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 0;user-select:none;}
+  .station-list-toggle .toggle-arrow{font-size:12px;color:var(--muted);transition:transform .25s;}
+  .station-list-toggle .toggle-arrow.open{transform:rotate(180deg);}
+  .station-list-body{overflow:hidden;transition:max-height .3s ease,opacity .3s ease;max-height:1200px;opacity:1;}
+  .station-list-body.collapsed{max-height:0;opacity:0;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">⛽ TankSlim</div>
+    <div class="logo-sub">Grenstanken Calculator · NL · DE · BE</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('calc')">Berekenen</button>
+    <button class="tab" onclick="switchTab('favs')">⭐ Favorieten <span id="fav-badge"></span></button>
+  </div>
+
+  <!-- CALCULATOR -->
+  <div id="tab-calc" class="tab-content active">
+    <div class="grid">
+      <div>
+        <!-- Voertuig -->
+        <div class="panel">
+          <div class="panel-title">Voertuig</div>
+          <div class="form-row">
+            <label>KENTEKEN (optioneel — detecteert brandstoftype via RDW)</label>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="kenteken" placeholder="AB-123-C" style="text-transform:uppercase;flex:1" oninput="formatKenteken(this)" onkeydown="if(event.key==='Enter')lookupKenteken()">
+              <button class="calc-btn" style="width:auto;padding:9px 16px;font-size:14px" onclick="lookupKenteken()">→</button>
+            </div>
+            <div class="error-msg" id="kenteken-error">Kenteken niet gevonden in het RDW-register.</div>
+          </div>
+          <div class="form-row">
+            <label>BRANDSTOFTYPE</label>
+            <select id="fueltype">
+              <option value="euro95">Benzine (Euro95 / E10)</option>
+              <option value="diesel">Diesel</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-bottom:0">
+            <label>VERBRUIK</label>
+            <div class="toggle-wrap" style="margin-bottom:10px">
+              <button class="toggle-btn active" id="btn-l100" onclick="setUnit('l100')">L / 100 km</button>
+              <button class="toggle-btn" id="btn-kml" onclick="setUnit('kml')">km / L</button>
+            </div>
+            <input type="number" id="economy" placeholder="7.0" step="0.1" min="1">
+          </div>
+        </div>
+
+        <!-- NL station -->
+        <div class="panel">
+          <div class="panel-title">Thuisstation 🇳🇱 Nederland</div>
+          <button class="locate-btn" onclick="locateMe('nl')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+            Gebruik mijn locatie
+          </button>
+          <div class="form-row">
+            <label>ZOEK STAD OF ADRES</label>
+            <input type="text" id="search-nl" placeholder="bijv. Venlo, Nijmegen…" oninput="geocodeSearch('nl')">
+          </div>
+          <div id="stations-nl-list"></div>
+          <div class="station-block" id="selected-nl" style="display:none">
+            <div class="station-flag">🇳🇱</div>
+            <button class="star-btn" id="star-nl" onclick="toggleFav('nl')" title="Favoriet">☆</button>
+            <div class="station-name" id="nl-name"></div>
+            <div class="station-price nl" id="nl-price"></div>
+            <div class="station-addr" id="nl-addr"></div>
+          </div>
+        </div>
+
+        <!-- Foreign station -->
+        <div class="panel">
+          <div class="panel-title">Grensstation <span id="foreign-country-label" style="color:var(--muted);font-weight:400"></span></div>
+          <button class="locate-btn" onclick="locateMe('foreign')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+            Gebruik mijn locatie
+          </button>
+          <div class="form-row">
+            <label>ZOEK STAD OF ADRES</label>
+            <input type="text" id="search-foreign" placeholder="bijv. Kleve, Antwerpen…" oninput="geocodeSearch('foreign')">
+          </div>
+          <div id="stations-foreign-list"></div>
+          <div class="station-block" id="selected-foreign" style="display:none">
+            <div class="station-flag" id="foreign-flag">🇩🇪</div>
+            <button class="star-btn" id="star-foreign" onclick="toggleFav('foreign')" title="Favoriet">☆</button>
+            <div class="station-name" id="foreign-name"></div>
+            <div class="station-price de" id="foreign-price"></div>
+            <div class="station-addr" id="foreign-addr"></div>
+          </div>
+        </div>
+
+        <button class="calc-btn" id="calc-btn" onclick="calculate()" disabled>Bereken break-even punt</button>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div id="map-browse-hint" style="font-size:11px;color:var(--muted);text-align:right;margin-bottom:5px;height:16px;transition:opacity .3s"></div>
+        <div id="map"></div>
+        <div class="result-panel" id="result-panel">
+          <div id="fuel-badge-wrap"></div>
+          <div id="result-content"></div>
+          <div class="divider"></div>
+          <div class="stats-grid" id="stats-grid"></div>
+          <div style="margin-top:18px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Break-even visualisatie</div>
+            <div class="breakeven-bar"><div class="breakeven-fill" id="breakeven-fill" style="width:0%"></div></div>
+            <div class="bar-labels"><span>0 L</span><span id="bar-max">100 L</span></div>
+          </div>
+          <div class="cost-breakdown" id="cost-breakdown" style="display:none"></div>
+          <div class="notice">⚠️ Prijzen zijn indicatief. NL via ANWB, DE via Tankerkönig (gratis API-key vereist), BE op basis van marktgemiddelden. Controleer altijd ter plaatse. Wegafstand = luchtlijn × 1,3.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAVORITES -->
+  <div id="tab-favs" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">Opgeslagen tankstations</div>
+      <div id="fav-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let unit = 'l100';
+let selectedCountry = null; // auto-detected from coordinates
+let stationNL = null;
+let stationForeign = null;
+let map, markerNL, markerForeign, routeLine;
+let searchTimers = {};
+let mapMarkers = [];       // markers from station list (both sides)
+let browseMarkers = [];    // markers from map browse (background layer)
+let favorites = [];
+let browseDebounceTimer = null;
+let lastBrowseBounds = null;
+
+
+const CINFO = {
+  de:{ flag:'🇩🇪', label:'Duitsland', cc:'de', color:'var(--de)', cls:'de' },
+  be:{ flag:'🇧🇪', label:'België',    cc:'be', color:'var(--be)', cls:'be' }
+};
+
+// ===== TABS =====
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['calc','favs'][i]===t));
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if (t==='favs') renderFavorites();
+}
+
+// ===== UNIT =====
+function setUnit(u) {
+  unit = u;
+  document.getElementById('btn-l100').classList.toggle('active', u==='l100');
+  document.getElementById('btn-kml').classList.toggle('active', u==='kml');
+  document.getElementById('economy').placeholder = u==='l100' ? '7.0' : '14.3';
+}
+
+// ===== MAP =====
+const MIN_BROWSE_ZOOM = 11; // don't fetch below this zoom (area too large)
+
+function initMap() {
+  map = L.map('map').setView([51.5, 5.8], 7);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19
+  }).addTo(map);
+
+  map.on('moveend', () => {
+    clearTimeout(browseDebounceTimer);
+    const zoom = map.getZoom();
+    const hint = document.getElementById('map-browse-hint');
+    if (zoom < MIN_BROWSE_ZOOM) {
+      hint.textContent = '🔍 Zoom in om tankstations te laden';
+      return;
+    }
+    hint.textContent = '';
+    browseDebounceTimer = setTimeout(() => fetchMapBrowse(), 800);
+  });
+}
+
+// Fetch stations for the current map view and show as browse markers (no list update)
+async function fetchMapBrowse() {
+  const zoom = map.getZoom();
+  if (zoom < MIN_BROWSE_ZOOM) return;
+
+  const bounds = map.getBounds();
+  const center = bounds.getCenter();
+  const lat = center.lat, lng = center.lng;
+
+  const fuel = document.getElementById('fueltype').value;
+  const hint = document.getElementById('map-browse-hint');
+  hint.textContent = '⏳ Laden…';
+
+  // Detect country from map center
+  const country = await detectCountry(lat, lng);
+  if (!country) { hint.textContent = ''; return; }
+
+  let stations = [];
+  try {
+    if (country === 'nl') {
+      const anwbFuel = fuel === 'diesel' ? 'DIESEL' : 'EURO95';
+      const radiusM = Math.min(10000, Math.round(haversine(lat, lng, bounds.getNorth(), bounds.getEast()) * 1000));
+      const r = await fetch(`${PROXY_URL}?lat=${lat}&lng=${lng}&radius=${radiusM}&fuel=${anwbFuel}`);
+      const data = await r.json();
+      if (Array.isArray(data)) {
+        stations = data.map(s => ({
+          name: s.name||'Station', lat: parseFloat(s.lat), lng: parseFloat(s.lng),
+          price: (s.prices||[]).find(p=>p.fuelType===anwbFuel&&p.value>0)?.value ?? null,
+          country: 'nl'
+        })).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
+      }
+    } else if (country === 'de') {
+      const type = fuel === 'diesel' ? 'diesel' : 'e10';
+      const r = await fetch(`${PROXY_URL}?source=tk&lat=${lat}&lng=${lng}&rad=8&type=${type}`);
+      const data = await r.json();
+      if (data.ok) {
+        stations = (data.stations||[]).map(s => ({
+          name: s.brand||s.name||'Station', lat: s.lat, lng: s.lng,
+          price: s[type]>0 ? s[type] : (s.e5>0 ? s.e5 : null),
+          country: 'de'
+        })).filter(s => s.lat && s.lng);
+      }
+    } else if (country === 'be') {
+      const fuelType = fuel === 'diesel' ? 'Diesel' : 'Gasoline';
+      const r = await fetch(`${PROXY_URL}?source=be&lat=${lat}&lng=${lng}&rad=8&fuelType=${fuelType}`);
+      const data = await r.json();
+      if (data.success) {
+        stations = (data.data?.locations?.markers||[]).map(s => {
+          const po = (s.prices||[]).find(p=>p.type===fuelType&&p.currency?.code==='EUR'&&p.price>0)||(s.prices||[])[0];
+          return { name: s.name||'Station', lat: s.coordinates?.latitude, lng: s.coordinates?.longitude, price: po?.price??null, country:'be' };
+        }).filter(s => s.lat && s.lng);
+      }
+    }
+  } catch(e) {}
+
+  renderBrowseMarkers(stations, country);
+  hint.textContent = stations.length ? `${stations.length} stations in beeld` : '';
+  setTimeout(() => { if (hint.textContent.includes('in beeld')) hint.textContent = ''; }, 2500);
+}
+
+// Detect which country the map center is in via Nominatim (cached)
+const countryCache = {};
+async function detectCountry(lat, lng) {
+  const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+  if (countryCache[key] !== undefined) return countryCache[key];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=5`);
+    const d = await r.json();
+    const cc = d.address?.country_code?.toLowerCase();
+    const result = cc === 'nl' ? 'nl' : cc === 'de' ? 'de' : cc === 'be' ? 'be' : null;
+    countryCache[key] = result;
+    return result;
+  } catch(e) { return null; }
+}
+
+// Render browse markers — smaller dots, separate layer, don't touch mapMarkers
+function renderBrowseMarkers(stations, country) {
+  browseMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+  browseMarkers = [];
+  if (!stations.length) return;
+
+  const prices = stations.map(s => parseFloat(s.price)).filter(p => !isNaN(p) && p > 0);
+  const minPrice = prices.length ? Math.min(...prices) : 0;
+  const maxPrice = prices.length ? Math.max(...prices) : 0;
+
+  stations.forEach(s => {
+    if (!s.lat || !s.lng) return;
+    const dotColor = priceColor(parseFloat(s.price), minPrice, maxPrice);
+    const prStr = s.price ? '€ ' + parseFloat(s.price).toFixed(3) : '—';
+    const icon = L.divIcon({
+      html: `<div style="width:10px;height:10px;background:${dotColor};border:1.5px solid rgba(255,255,255,0.65);border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer"></div>`,
+      className: '', iconSize: [10,10], iconAnchor: [5,5]
+    });
+    const m = L.marker([s.lat, s.lng], { icon, zIndexOffset: -100 }).addTo(map)
+      .bindPopup(`<b>${s.name}</b><br><b style="color:${dotColor};font-size:15px">${prStr}</b>`);
+    browseMarkers.push(m);
+  });
+}
+
+// ===== RDW KENTEKEN =====
+// Format license plate with dashes on every input change
+// Dutch plates: groups of letters/digits separated by dashes, e.g. AB-123-C, JD-40-8X
+function formatKenteken(input) {
+  const pos = input.selectionStart;
+  const raw = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8);
+  // Determine dash positions from known Dutch plate patterns (longest match first)
+  const patterns = [
+    /^([A-Z]{2})(\d{2})(\d{2})$/,         // AA-99-99
+    /^(\d{2})(\d{2})([A-Z]{2})$/,         // 99-99-AA
+    /^(\d{2})([A-Z]{2})(\d{2})$/,         // 99-AA-99
+    /^([A-Z]{2})(\d{2})([A-Z]{2})$/,      // AA-99-AA
+    /^([A-Z]{3})(\d{2})([A-Z])$/,         // AAA-99-A
+    /^([A-Z])(\d{2})([A-Z]{3})$/,         // A-99-AAA
+    /^(\d{2})([A-Z]{3})(\d)$/,            // 99-AAA-9
+    /^(\d)([A-Z]{3})(\d{2})$/,            // 9-AAA-99
+    /^([A-Z]{2})(\d{3})([A-Z])$/,         // AA-999-A
+    /^([A-Z])(\d{3})([A-Z]{2})$/,         // A-999-AA
+    /^(\d{2})([A-Z]{2})([A-Z])(\d)$/,     // 99-AA-A-9 (sidecars etc, skip)
+  ];
+  let formatted = raw;
+  for (const pat of patterns) {
+    const m = raw.match(pat);
+    if (m) { formatted = m.slice(1).join('-'); break; }
+  }
+  // If no full match, insert dashes every 2 chars as progressive fallback
+  if (formatted === raw && raw.length > 2) {
+    // Progressive: show dashes after each group of 2 while typing
+    formatted = raw.match(/.{1,2}/g)?.join('-') ?? raw;
+  }
+  input.value = formatted;
+  // Restore caret: count non-dash chars up to original pos, map back
+  let newPos = 0, count = 0;
+  const target = [...raw.slice(0, pos).replace(/-/g,'')].length;
+  for (let i = 0; i < formatted.length; i++) {
+    if (formatted[i] !== '-') count++;
+    if (count === target) { newPos = i + 1; break; }
+    newPos = i + 1;
+  }
+  input.setSelectionRange(newPos, newPos);
+}
+
+async function lookupKenteken() {
+  const raw = document.getElementById('kenteken').value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+  const errEl = document.getElementById('kenteken-error');
+  errEl.style.display='none';
+  if (!raw) return;
+  try {
+    const r = await fetch('https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken='+raw);
+    const d = await r.json();
+    if (!d.length) { errEl.style.display='block'; return; }
+    const rf = await fetch('https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken='+raw);
+    const fd = await rf.json();
+    if (fd.length) {
+      const ft = (fd[0].brandstof_omschrijving||'').toLowerCase();
+      document.getElementById('fueltype').value = ft.includes('diesel') ? 'diesel' : 'euro95';
+    }
+    document.getElementById('kenteken').value = raw.match(/.{1,2}/g).join('-');
+    document.getElementById('kenteken').style.borderColor='var(--accent)';
+    setTimeout(()=>document.getElementById('kenteken').style.borderColor='',1500);
+  } catch(e) { errEl.style.display='block'; }
+}
+
+// ===== LOCATE =====
+function locateMe(side) {
+  if (!navigator.geolocation) return alert('Geolocation niet beschikbaar.');
+  navigator.geolocation.getCurrentPosition(pos => {
+    fetchStationsNearby(pos.coords.latitude, pos.coords.longitude, side);
+    map.setView([pos.coords.latitude, pos.coords.longitude], 12);
+  }, ()=>alert('Locatietoegang geweigerd.'));
+}
+
+// ===== GEOCODE =====
+function geocodeSearch(side) {
+  clearTimeout(searchTimers[side]);
+  const q = document.getElementById('search-'+side).value.trim();
+  if (q.length < 3) return;
+  // NL searches only NL; foreign searches DE+BE (no filter = broader results)
+  const ccFilter = side === 'nl' ? '&countrycodes=nl' : '&countrycodes=de,be';
+  searchTimers[side] = setTimeout(async()=>{
+    try {
+      const r = await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=1'+ccFilter);
+      const data = await r.json();
+      if (!data.length) return;
+      fetchStationsNearby(+data[0].lat, +data[0].lon, side);
+      map.setView([+data[0].lat, +data[0].lon], 12);
+    } catch(e){}
+  }, 650);
+}
+
+// ===== FETCH STATIONS =====
+async function fetchStationsNearby(lat, lng, side) {
+  const listId = 'stations-'+side+'-list';
+  document.getElementById(listId).innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0"><span class="spinner"></span>Tankstations ophalen…</div>';
+  if (side === 'nl') {
+    await fetchANWB(lat, lng);
+  } else {
+    // Auto-detect country from coordinates
+    const country = await detectCountry(lat, lng);
+    selectedCountry = country || 'de';
+    // Update label in panel title
+    const lbl = document.getElementById('foreign-country-label');
+    if (lbl) lbl.textContent = country ? '· ' + (CINFO[country]?.flag + ' ' + CINFO[country]?.label) : '';
+    if (selectedCountry === 'be') await fetchBE(lat, lng);
+    else await fetchTK(lat, lng);
+  }
+}
+
+// ----- NL: ANWB via Cloudflare proxy -----
+const PROXY_URL = 'https://tankslim-proxy.fradoum99.workers.dev';
+
+async function fetchANWB(lat, lng) {
+  const fuel = document.getElementById('fueltype').value;
+  // Map app fuel type to ANWB fuelType values
+  const anwbFuel = fuel === 'diesel' ? 'DIESEL' : 'EURO95';
+  let stations;
+  try {
+    const r = await fetch(`${PROXY_URL}?lat=${lat}&lng=${lng}&radius=5000&fuel=${anwbFuel}`);
+    const data = await r.json();
+
+    if (data.error) throw new Error(data.error + (data.body ? ' — ' + data.body.slice(0,120) : ''));
+    if (!Array.isArray(data)) throw new Error('Onverwacht formaat: ' + JSON.stringify(data).slice(0,100));
+
+    stations = data.slice(0, 50).map(s => {
+      // prices[] bevat objecten met fuelType (EURO95/DIESEL) en value
+      const matchFuel = (s.prices || []).find(p => p.fuelType === anwbFuel && p.value > 0);
+      const lat = parseFloat(s.lat);
+      const lng = parseFloat(s.lng);
+      return {
+        name:    s.name || 'Station',
+        address: s.address || '',
+        lat,
+        lng,
+        price:   matchFuel ? matchFuel.value.toFixed(3) : null,
+        country: 'nl'
+      };
+    }).filter(s => !isNaN(s.lat) && !isNaN(s.lng) && s.lat !== 0 && s.lng !== 0);
+
+    if (!stations.length) throw new Error('Geen stations gevonden in dit gebied');
+  } catch(e) {
+    addNote('stations-nl-list', '⚠️ Proxy fout: ' + e.message + '. Demoprijzen getoond.');
+    stations = demoStations(lat, lng, 'nl', fuel);
+  }
+  renderList(stations, 'nl', lat, lng);
+}
+
+// ----- DE: Tankerkönig via Cloudflare proxy -----
+async function fetchTK(lat, lng) {
+  const fuel = document.getElementById('fueltype').value;
+  const type = fuel === 'diesel' ? 'diesel' : 'e10';
+  let stations;
+  try {
+    const proxyUrl = `${PROXY_URL}?source=tk&lat=${lat}&lng=${lng}&rad=8&type=${type}`;
+    const r    = await fetch(proxyUrl);
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.message || JSON.stringify(data).slice(0, 100));
+
+    const list = data.stations || [];
+    if (!list.length) throw new Error('Geen stations gevonden in dit gebied');
+
+    // Prices are directly on the station object: s.e10, s.diesel, s.e5
+    stations = list.slice(0, 50).map(s => ({
+      name:    s.brand || s.name || 'Station',
+      address: [s.street, s.houseNumber, s.postCode, s.place].filter(Boolean).join(' '),
+      lat:     s.lat,
+      lng:     s.lng,
+      price:   s.price > 0 ? s.price : null,
+      country: 'de'
+    })).filter(s => s.lat && s.lng);
+
+    if (!stations.length) throw new Error('Geen geldige stations in response');
+  } catch(e) {
+    addNote('stations-foreign-list', '⚠️ Duitsland fout: ' + e.message + '. Demoprijzen getoond.');
+    stations = demoStations(lat, lng, 'de', document.getElementById('fueltype').value);
+  }
+  renderList(stations, 'foreign', lat, lng);
+}
+
+// ----- BE: Grid.com via Cloudflare proxy -----
+async function fetchBE(lat, lng) {
+  const fuel = document.getElementById('fueltype').value;
+  // Grid API fuelType: 'Gasoline' for benzine, 'Diesel' for diesel
+  const fuelType = fuel === 'diesel' ? 'Diesel' : 'Gasoline';
+  // Map Grid price type to what we want
+  const priceType = fuel === 'diesel' ? 'Diesel' : 'Gasoline';
+  let stations;
+  try {
+    const proxyUrl = `${PROXY_URL}?source=be&lat=${lat}&lng=${lng}&rad=8&fuelType=${fuelType}`;
+    const r    = await fetch(proxyUrl);
+    const data = await r.json();
+    if (!data.success) throw new Error('Grid API niet ok');
+
+    const markers = data.data?.locations?.markers || [];
+    if (!markers.length) throw new Error('Geen stations gevonden');
+
+    stations = markers.map(s => {
+      // Find matching price for selected fuel type
+      const priceObj = (s.prices || []).find(p =>
+        p.type === priceType && p.currency?.code === 'EUR' && p.price > 0
+      ) || (s.prices || [])[0];
+      return {
+        id:      s.id,
+        name:    s.name || s.brand || 'Station',
+        address: [s.address?.street, s.address?.city].filter(Boolean).join(', ') || '',
+        lat:     s.coordinates?.latitude,
+        lng:     s.coordinates?.longitude,
+        price:   priceObj?.price ?? null,
+        country: 'be'
+      };
+    }).filter(s => s.lat && s.lng);
+
+    if (!stations.length) throw new Error('Geen geldige stations in response');
+  } catch(e) {
+    addNote('stations-foreign-list', '⚠️ België fout: ' + e.message + '. Demoprijzen getoond.');
+    stations = demoStations(lat, lng, 'be', fuel);
+  }
+  renderList(stations, 'foreign', lat, lng);
+}
+
+function addNote(listId, html) {
+  const el = document.getElementById(listId);
+  const n = document.createElement('div');
+  n.style.cssText='font-size:11px;color:var(--muted);padding:7px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px;line-height:1.6';
+  n.innerHTML = html;
+  el.appendChild(n);
+}
+
+// ----- Demo data -----
+function demoStations(lat, lng, country, fuel) {
+  const brands = { nl:['Shell','BP','Tango','Tinq','Total','Esso'], de:['ARAL','Shell','JET','HEM','Esso','Total'], be:['Q8','Texaco','Total','Elf','Shell','Lukoil'] };
+  const base = { nl:{euro95:2.01,diesel:1.74}, de:{euro95:1.76,diesel:1.53}, be:{euro95:1.83,diesel:1.61} };
+  const offs = [[.010,.010],[-.010,.015],[.020,-.010],[-.015,-.020],[.025,.005],[.005,.025]];
+  const bp = base[country][fuel]||1.80;
+  return brands[country].map((name,i)=>({
+    name, country, address:'Demoprijs — zie API voor echte data',
+    lat:lat+offs[i][0], lng:lng+offs[i][1],
+    price:(bp+(Math.random()*.14-.07)).toFixed(3), isDemo:true
+  }));
+}
+
+// ===== PRICE COLOR — 5 discrete tiers based on sorted rank =====
+// Returns one of 5 fixed colors depending on where the price falls in the sorted list.
+// No interpolation — each station gets exactly one of these colors.
+const PRICE_COLORS = [
+  '#38bdf8',  // lichtblauw  — goedkoopst (~top 20%)
+  '#22c55e',  // groen       — goedkoop   (~top 20-40%)
+  '#facc15',  // geel        — gemiddeld  (~midden)
+  '#ef4444',  // rood        — duur       (~top 60-80%)
+  '#444444',  // donkergrijs/zwart — duurste (~top 80-100%)
+];
+
+function priceColor(price, minPrice, maxPrice) {
+  if (price == null || isNaN(price) || minPrice === maxPrice) return PRICE_COLORS[0];
+  const t = (price - minPrice) / (maxPrice - minPrice); // 0..1
+  const idx = Math.min(4, Math.floor(t * 5));
+  return PRICE_COLORS[idx];
+}
+
+// ===== RENDER LIST =====
+// Track map markers per station id for click-to-select from map
+let stationMarkerMap = {}; // id -> {marker, card}
+
+function renderList(stations, side, searchLat, searchLng) {
+  const listEl = document.getElementById('stations-'+side+'-list');
+  const country = side==='nl' ? 'nl' : selectedCountry;
+  const info = country==='nl' ? {flag:'🇳🇱',color:'var(--nl)'} : CINFO[country];
+
+  // Clear old map markers
+  mapMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+  mapMarkers = [];
+  stationMarkerMap = {};
+
+  // Clear list
+  listEl.innerHTML = '';
+
+  // Sort by price (ascending), stations without price go to bottom
+  const sorted = [...stations].sort((a, b) => {
+    const pa = parseFloat(a.price) || 9999;
+    const pb = parseFloat(b.price) || 9999;
+    return pa - pb;
+  });
+
+  // Price range for gradient
+  const prices = sorted.map(s => parseFloat(s.price)).filter(p => !isNaN(p) && p > 0);
+  const minPrice = prices.length ? Math.min(...prices) : 0;
+  const maxPrice = prices.length ? Math.max(...prices) : 0;
+
+  // Find cheapest price for highlighting
+  const cheapestPrice = sorted.find(s => s.price)?.price;
+
+  // Sort toggle state
+  if (!window.sortState) window.sortState = {};
+  const sortKey = side + '_sort';
+  if (!window.sortState[sortKey]) window.sortState[sortKey] = 'price';
+
+  // Collapsible wrapper
+  const isCollapsed = listEl._collapsed || false;
+  const wrapper = document.createElement('div');
+
+  // Header: "Kies een station (N)" + collapse toggle + sort buttons
+  const hdr = document.createElement('div');
+  hdr.className = 'station-list-toggle';
+  hdr.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Kies een station <span style="color:var(--text)">(${stations.length})</span></span>
+      <span class="toggle-arrow ${isCollapsed?'':'open'}">▼</span>
+    </div>
+    <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
+      <button id="sort-price-${side}" onclick="setSortOrder('${side}','price')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:${window.sortState[sortKey]==='price'?'var(--accent)':'var(--surface2)'};color:${window.sortState[sortKey]==='price'?'#000':'var(--muted)'};cursor:pointer;font-family:var(--font)">Prijs</button>
+      <button id="sort-dist-${side}" onclick="setSortOrder('${side}','dist')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:${window.sortState[sortKey]==='dist'?'var(--accent)':'var(--surface2)'};color:${window.sortState[sortKey]==='dist'?'#000':'var(--muted)'};cursor:pointer;font-family:var(--font)">Afstand</button>
+    </div>
+  `;
+
+  // Body (collapsible)
+  const body = document.createElement('div');
+  body.className = 'station-list-body' + (isCollapsed ? ' collapsed' : '');
+  body.style.cssText = 'margin-top:8px';
+
+  // Toggle on header click
+  hdr.addEventListener('click', () => {
+    const collapsed = body.classList.toggle('collapsed');
+    hdr.querySelector('.toggle-arrow').classList.toggle('open', !collapsed);
+    listEl._collapsed = collapsed;
+  });
+
+  wrapper.appendChild(hdr);
+  wrapper.appendChild(body);
+  listEl.appendChild(wrapper);
+
+  // Apply current sort
+  const display = window.sortState[sortKey] === 'price' ? sorted : [...stations].sort((a,b) => haversine(searchLat,searchLng,a.lat,a.lng) - haversine(searchLat,searchLng,b.lat,b.lng));
+
+  // Store for re-sort
+  listEl._stations = stations;
+  listEl._side = side;
+  listEl._searchLat = searchLat;
+  listEl._searchLng = searchLng;
+
+  display.forEach(s => {
+    const distKm = haversine(searchLat,searchLng,s.lat,s.lng).toFixed(1);
+    const prStr = s.price ? '€ '+parseFloat(s.price).toFixed(3) : '—';
+    const isCheapest = s.price && parseFloat(s.price) === parseFloat(cheapestPrice);
+    const isFav = favorites.some(f=>f.name===s.name&&f.address===s.address);
+    const gradColor = priceColor(parseFloat(s.price), minPrice, maxPrice);
+    // Darken border for black markers
+    const cardBorder = isCheapest ? '#22c55e' : 'var(--border)';
+
+    const card = document.createElement('div');
+    card.dataset.stationId = s.id;
+    card.style.cssText=`background:var(--surface2);border:1px solid ${cardBorder};border-left:3px solid ${gradColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s;position:relative`;
+    card.innerHTML=`
+      ${isCheapest ? '<div style="position:absolute;top:-1px;left:12px;background:#22c55e;color:#000;font-size:10px;font-weight:700;padding:1px 7px;border-radius:0 0 6px 6px;letter-spacing:.05em">GOEDKOOPST</div>' : ''}
+      <div style="font-size:11px;color:var(--muted);margin-top:${isCheapest?'10px':'0'}">${distKm} km · ${info.flag}</div>
+      <div style="font-size:14px;font-weight:600;margin:3px 0 2px">${s.name}${s.isDemo?'<span style="font-size:10px;color:var(--accent2);margin-left:6px">DEMO</span>':''}</div>
+      <div style="font-family:var(--mono);font-size:18px;color:${gradColor};font-weight:${isCheapest?'700':'500'}">${prStr}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.address}</div>
+      <button style="position:absolute;top:9px;right:9px;background:none;border:none;cursor:pointer;font-size:16px;opacity:${isFav?1:.35}" onclick="event.stopPropagation();listFav(this,${JSON.stringify(s).replace(/"/g,'&quot;')},'${country}')">${isFav?'⭐':'☆'}</button>
+    `;
+    card.addEventListener('mouseenter',()=>{ if(!card.classList.contains('selected-card')) card.style.borderColor=gradColor; });
+    card.addEventListener('mouseleave',()=>{ if(!card.classList.contains('selected-card')) card.style.borderColor=cardBorder; });
+    card.addEventListener('click',()=>{
+      selectStation(s,side);
+      highlightCard(card, side);
+      // Auto-collapse after selection
+      body.classList.add('collapsed');
+      hdr.querySelector('.toggle-arrow').classList.remove('open');
+      listEl._collapsed = true;
+    });
+    body.appendChild(card);
+
+    // Map marker — colored dot pin, price shown in popup on click
+    if (s.lat&&s.lng) {
+      const dotColor = gradColor;
+      const icon = L.divIcon({
+        html:`<div style="position:relative;width:14px;height:14px">
+          <div style="
+            width:14px;height:14px;
+            background:${dotColor};
+            border:2px solid rgba(255,255,255,0.7);
+            border-radius:50%;
+            box-shadow:0 2px 6px rgba(0,0,0,.5);
+            cursor:pointer;
+          "></div>
+          ${isCheapest ? '<div style="position:absolute;top:-7px;right:-7px;font-size:9px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">⭐</div>' : ''}
+        </div>`,
+        className:'',
+        iconSize: [14,14],
+        iconAnchor: [7,7]
+      });
+      const m = L.marker([s.lat,s.lng],{icon}).addTo(map)
+        .bindPopup(`
+          <b>${s.name}</b><br>
+          ${s.address}<br>
+          <b style="color:${dotColor};font-size:15px">${prStr}</b>
+          ${isCheapest?'<br><b style="color:#22c55e">⭐ Goedkoopst</b>':''}
+        `);
+      // Click on map marker selects the station
+      m.on('click', () => {
+        selectStation(s, side);
+        const cardEl = body.querySelector(`[data-station-id="${s.id}"]`);
+        if (cardEl) { highlightCard(cardEl, side); cardEl.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+      });
+      mapMarkers.push(m);
+      stationMarkerMap[s.id] = { marker: m, card };
+    }
+  });
+}
+
+// Highlight selected card, deselect others
+function highlightCard(card, side) {
+  const listEl = document.getElementById('stations-'+side+'-list');
+  listEl.querySelectorAll('.selected-card').forEach(c => {
+    c.classList.remove('selected-card');
+    c.style.boxShadow = '';
+    c.style.borderColor = 'var(--border)';
+    c.style.borderLeftColor = c._gradColor || 'var(--border)';
+  });
+  card.classList.add('selected-card');
+  card.style.borderColor = 'var(--accent)';
+  card.style.boxShadow = '0 0 0 2px var(--accent)';
+}
+
+// Re-render with new sort order
+function setSortOrder(side, order) {
+  if (!window.sortState) window.sortState = {};
+  window.sortState[side+'_sort'] = order;
+  const listEl = document.getElementById('stations-'+side+'-list');
+  if (listEl._stations) {
+    renderList(listEl._stations, side, listEl._searchLat, listEl._searchLng);
+  }
+}
+
+// ===== FAV FROM LIST =====
+function listFav(btn, s, country) {
+  s.country = country;
+  const idx = favorites.findIndex(f=>f.name===s.name&&f.address===s.address);
+  if (idx>=0) { favorites.splice(idx,1); btn.textContent='☆'; btn.style.opacity='.35'; }
+  else { favorites.push({...s, savedAt:new Date().toLocaleDateString('nl-NL')}); btn.textContent='⭐'; btn.style.opacity='1'; }
+  updateFavBadge();
+}
+
+// ===== SELECT STATION =====
+function selectStation(s, side) {
+  if (side==='nl') {
+    stationNL=s;
+    document.getElementById('selected-nl').style.display='block';
+    document.getElementById('nl-name').textContent=s.name;
+    document.getElementById('nl-price').textContent=s.price?'€ '+parseFloat(s.price).toFixed(3):'—';
+    document.getElementById('nl-addr').textContent=s.address;
+    document.getElementById('star-nl').textContent=favorites.some(f=>f.name===s.name)?'⭐':'☆';
+    if (markerNL) map.removeLayer(markerNL);
+    markerNL=L.circleMarker([s.lat,s.lng],{radius:11,color:'#ff6b35',fillColor:'#ff6b35',fillOpacity:.9,weight:3}).addTo(map);
+  } else {
+    stationForeign=s;
+    const c=s.country||selectedCountry, info=CINFO[c];
+    document.getElementById('selected-foreign').style.display='block';
+    document.getElementById('foreign-flag').textContent=info.flag;
+    document.getElementById('foreign-name').textContent=s.name;
+    const fp=document.getElementById('foreign-price');
+    fp.className='station-price '+c;
+    fp.textContent=s.price?'€ '+parseFloat(s.price).toFixed(3):'—';
+    document.getElementById('foreign-addr').textContent=s.address;
+    document.getElementById('star-foreign').textContent=favorites.some(f=>f.name===s.name)?'⭐':'☆';
+    if (markerForeign) map.removeLayer(markerForeign);
+    markerForeign=L.circleMarker([s.lat,s.lng],{radius:11,color:info.color,fillColor:info.color,fillOpacity:.9,weight:3}).addTo(map);
+  }
+  if (stationNL&&stationForeign) { drawRoute(); document.getElementById('calc-btn').disabled=false; }
+}
+
+// ===== TOGGLE FAV (selected) =====
+function toggleFav(side) {
+  const s=side==='nl'?stationNL:stationForeign; if(!s) return;
+  const c=s.country||(side==='nl'?'nl':selectedCountry);
+  const idx=favorites.findIndex(f=>f.name===s.name&&f.address===s.address);
+  const btn=document.getElementById('star-'+side);
+  if (idx>=0) { favorites.splice(idx,1); btn.textContent='☆'; btn.classList.remove('saved'); }
+  else { favorites.push({...s,country:c,savedAt:new Date().toLocaleDateString('nl-NL')}); btn.textContent='⭐'; btn.classList.add('saved'); }
+  updateFavBadge();
+}
+
+function updateFavBadge() {
+  const b=document.getElementById('fav-badge');
+  b.textContent=favorites.length?'('+favorites.length+')':'';
+}
+
+// ===== DRAW ROUTE =====
+function drawRoute() {
+  if (routeLine) map.removeLayer(routeLine);
+  if (!stationNL||!stationForeign) return;
+  routeLine=L.polyline([[stationNL.lat,stationNL.lng],[stationForeign.lat,stationForeign.lng]],{color:'#fff',weight:2,opacity:.2,dashArray:'6 9'}).addTo(map);
+  map.fitBounds(L.latLngBounds([[stationNL.lat,stationNL.lng],[stationForeign.lat,stationForeign.lng]]),{padding:[60,60]});
+}
+
+// ===== CALCULATE =====
+function calculate() {
+  if (!stationNL||!stationForeign) return;
+  const econRaw=parseFloat(document.getElementById('economy').value);
+  if (isNaN(econRaw)||econRaw<=0) return alert('Voer een geldig verbruik in.');
+  const l100=unit==='l100'?econRaw:100/econRaw;
+  const pNL=parseFloat(stationNL.price), pF=parseFloat(stationForeign.price);
+  if (isNaN(pNL)||isNaN(pF)) return alert('Prijs ontbreekt bij een of beide stations.');
+
+  const fuel=document.getElementById('fueltype').value;
+  const fuelLabel=fuel==='diesel'?'Diesel':'Benzine (E10)';
+  const c=stationForeign.country||selectedCountry, info=CINFO[c];
+
+  // Distances
+  const lucht=haversine(stationNL.lat,stationNL.lng,stationForeign.lat,stationForeign.lng);
+  const wegKm=lucht*1.30, roundtrip=wegKm*2;
+
+  // Omrijkosten: alleen brandstof, geen afschrijving
+  const omrijL=(roundtrip/100)*l100;
+  const omrijEur=omrijL*pF; // gebruik buitenlandse prijs voor de rit
+
+  const diff=pNL-pF;
+  const breakEven=diff>0?omrijEur/diff:Infinity;
+
+  const panel=document.getElementById('result-panel');
+  document.getElementById('fuel-badge-wrap').innerHTML=`<div class="fuel-badge">⛽ ${fuelLabel} · ${info.flag} ${info.label}</div>`;
+
+  if (diff<=0) {
+    document.getElementById('result-content').innerHTML=`
+      <div class="result-hero"><div class="result-number" style="background:linear-gradient(135deg,var(--accent2),#ff4500);-webkit-background-clip:text">NL goedkoper</div></div>
+      <div class="result-label">NL (€ ${pNL.toFixed(3)}) is goedkoper dan ${info.label} (€ ${pF.toFixed(3)}). Grenstanken loont hier niet.</div>`;
+    document.getElementById('stats-grid').innerHTML='';
+    document.getElementById('cost-breakdown').style.display='none';
+    document.getElementById('breakeven-fill').style.width='0%';
+    panel.classList.add('show'); return;
+  }
+
+  const s50=(50*diff-omrijEur), s60=(60*diff-omrijEur), s75=(75*diff-omrijEur);
+
+  document.getElementById('result-content').innerHTML=`
+    <div class="result-hero">
+      <div class="result-number">${isFinite(breakEven)?breakEven.toFixed(1):'∞'}</div>
+      <div><div class="result-unit">liter</div><div class="result-label">minimaal tanken voor break-even</div></div>
+    </div>
+    <div class="distance-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 5l7 7-7 7"/></svg>
+      Luchtlijn <span>${lucht.toFixed(1)} km</span> · Wegschatting <span>~${wegKm.toFixed(0)} km</span> · Roundtrip <span>~${roundtrip.toFixed(0)} km</span>
+    </div>`;
+
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-label">🇳🇱 NL prijs</div><div class="stat-value orange">€ ${pNL.toFixed(3)}</div></div>
+    <div class="stat-card"><div class="stat-label">${info.flag} ${info.label}</div><div class="stat-value ${c==='be'?'yellow':'green'}">€ ${pF.toFixed(3)}</div></div>
+    <div class="stat-card"><div class="stat-label">Besparing/liter</div><div class="stat-value green">€ ${diff.toFixed(3)}</div></div>
+    <div class="stat-card"><div class="stat-label">Omrijbrandstof</div><div class="stat-value">${omrijL.toFixed(2)} L</div></div>
+    <div class="stat-card"><div class="stat-label">Winst bij 50 L</div><div class="stat-value ${s50>0?'green':'orange'}">€ ${s50.toFixed(2)}</div></div>
+    <div class="stat-card"><div class="stat-label">Winst bij 60 L</div><div class="stat-value ${s60>0?'green':'orange'}">€ ${s60.toFixed(2)}</div></div>
+    <div class="stat-card"><div class="stat-label">Winst bij 75 L</div><div class="stat-value ${s75>0?'green':'orange'}">€ ${s75.toFixed(2)}</div></div>
+    <div class="stat-card"><div class="stat-label">Omrijkosten</div><div class="stat-value orange">€ ${omrijEur.toFixed(2)}</div></div>`;
+
+  const breakdown=document.getElementById('cost-breakdown');
+  breakdown.style.display='block';
+  breakdown.innerHTML=`
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Kostenberekening (alleen brandstof, geen afschrijving)</div>
+    <div class="cost-row"><span class="lbl">Roundtrip wegafstand</span><span class="val">~${roundtrip.toFixed(0)} km</span></div>
+    <div class="cost-row"><span class="lbl">Brandstof onderweg</span><span class="val">${omrijL.toFixed(2)} L × € ${pF.toFixed(3)}</span></div>
+    <div class="cost-row"><span class="lbl">Omrijkosten totaal</span><span class="val" style="color:var(--accent2)">€ ${omrijEur.toFixed(2)}</span></div>
+    <div class="cost-row"><span class="lbl">Besparing per liter getankt</span><span class="val">€ ${diff.toFixed(3)}</span></div>
+    <div class="cost-row total"><span class="lbl">Break-even tankbeurt</span><span class="val" style="color:var(--accent)">${isFinite(breakEven)?breakEven.toFixed(1):'∞'} L</span></div>`;
+
+  const barMax=Math.max(80,Math.ceil(breakEven*1.6/10)*10);
+  document.getElementById('bar-max').textContent=barMax+' L';
+  document.getElementById('breakeven-fill').style.width=Math.min(100,(breakEven/barMax)*100)+'%';
+  panel.classList.add('show');
+}
+
+// ===== FAVORITES TAB =====
+function renderFavorites() {
+  const el=document.getElementById('fav-list');
+  if (!favorites.length) {
+    el.innerHTML='<div class="fav-empty">Nog geen favorieten opgeslagen.<br>Selecteer een station en klik ☆ om het op te slaan.</div>';
+    return;
+  }
+  el.innerHTML='';
+  favorites.forEach((f,i)=>{
+    const info=f.country==='nl'?{flag:'🇳🇱',color:'var(--nl)'}:CINFO[f.country]||{flag:'🏁',color:'var(--accent)'};
+    const card=document.createElement('div');
+    card.className='fav-card';
+    card.innerHTML=`
+      <div style="font-size:28px">${info.flag}</div>
+      <div class="fav-info">
+        <div class="fav-name">${f.name}</div>
+        <div class="fav-addr">${f.address}</div>
+        <div class="fav-price" style="color:${info.color}">€ ${parseFloat(f.price).toFixed(3)} <span style="font-size:11px;color:var(--muted)">· ${f.savedAt}</span></div>
+      </div>
+      <div class="fav-actions">
+        <button class="fav-btn" onclick="loadFav(${i})">📍 Gebruik</button>
+        <button class="fav-btn del" onclick="deleteFav(${i})">✕</button>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+
+function loadFav(i) {
+  const f=favorites[i];
+  const side=f.country==='nl'?'nl':'foreign';
+  if (f.country!=='nl') setCountry(f.country);
+  selectStation(f, side);
+  switchTab('calc');
+  map.setView([f.lat,f.lng],13);
+}
+
+function deleteFav(i) {
+  favorites.splice(i,1);
+  updateFavBadge();
+  renderFavorites();
+}
+
+// ===== HAVERSINE =====
+function haversine(lat1,lon1,lat2,lon2) {
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.asin(Math.sqrt(a));
+}
+
+// ===== INIT =====
+initMap();
+</script>
+</body>
+</html>
